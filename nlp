@@ -1,0 +1,54 @@
+import requests
+from bs4 import BeautifulSoup
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize, sent_tokenize
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+import pandas as pd
+
+# Ensure required NLTK resources are downloaded
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
+
+# Define function to scrape data
+def scrape_data(url):
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    text = soup.get_text()
+    return text
+
+# Sample URL for financial news
+url = 'https://www.example.com/financial-news-article'
+raw_text = scrape_data(url)
+
+# Initial data cleaning
+cleaned_text = raw_text.lower()
+
+# Tokenization
+word_tokens = word_tokenize(cleaned_text)
+sentence_tokens = sent_tokenize(cleaned_text)
+
+# Stop word removal
+stop_words = set(stopwords.words('english'))
+filtered_words = [word for word in word_tokens if word.isalnum() and word not in stop_words]
+
+# Stemming and Lemmatization
+ps = PorterStemmer()
+lemmatizer = WordNetLemmatizer()
+stemmed_words = [ps.stem(word) for word in filtered_words]
+lemmatized_words = [lemmatizer.lemmatize(word) for word in filtered_words]
+
+# Store processed data
+data = {
+    'Original Text': raw_text,
+    'Cleaned Text': cleaned_text,
+    'Filtered Words': filtered_words,
+    'Stemmed Words': stemmed_words,
+    'Lemmatized Words': lemmatized_words
+}
+
+df = pd.DataFrame([data])
+df.to_csv('preprocessed_data.csv', index=False)
+
+print("Data preprocessing complete. Stored in 'preprocessed_data.csv'.")
